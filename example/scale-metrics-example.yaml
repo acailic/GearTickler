@@ -1,0 +1,25 @@
+apiVersion: geartickler.com/v1alpha1
+kind: AIWorkload
+metadata:
+  name: bert-sentiment
+spec:
+  modelName: bert-base-uncased
+  modelVersion: v1.0.0
+  framework: ONNX
+  replicas: 2
+  inferenceEndpoint: /api/v1/predict
+  resources:
+    limits:
+      cpu: "2"
+      memory: "4Gi"
+      nvidia.com/gpu: "1"
+    requests:
+      cpu: "1"
+      memory: "2Gi"
+      nvidia.com/gpu: "1"
+  autoscaling:
+    enabled: true
+    minReplicas: 2
+    maxReplicas: 5
+    targetCPUUtilization: 75
+    targetGPUUtilization: 80
