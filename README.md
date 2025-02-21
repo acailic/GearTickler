@@ -14,7 +14,7 @@ A Kubernetes operator for managing AI/ML workloads, built with Quarkus and Java 
 
 - Kubernetes cluster (v1.19+)
 - NVIDIA GPU Operator (for GPU support)
-- Java 17+ƒ
+- Java 17+
 - Maven 3.8+
 - Docker
 
@@ -109,15 +109,3 @@ The operator exposes Prometheus metrics at `/metrics`, including:
 ## License
 
 This project is licensed under the Apache License 2.0 - see the [LICENSE](LICENSE) file for details.
-
-### Commands
-
-#### set global java version sdk to 23
-
-```bash
-sdk default  java 17.0.9-zulu
-```
-
-```bash
-sdk default  java 23.0.2-zulu
-```
