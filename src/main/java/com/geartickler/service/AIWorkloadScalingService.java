@@ -10,10 +10,14 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import io.fabric8.kubernetes.client.KubernetesClient;
 import io.fabric8.kubernetes.api.model.Pod;
+import lombok.Data;
+import lombok.Getter;
+import lombok.Setter;
 
 import java.util.Map;
 import java.util.HashMap;
 import java.util.List;
+import java.util.ArrayList;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.Collectors;
 
@@ -194,48 +198,19 @@ public class AIWorkloadScalingService {
     scalingHistory.put(key, history);
   }
 
+  @Getter
+  @Setter
   private static class ScalingHistory {
-    long lastScalingTime;
-    ScalingDecision decision;
+    private long lastScalingTime;
+    private ScalingDecision decision;
   }
 
+  @Data
   private static class ScalingDecision {
     private boolean scaleUp;
     private boolean scaleDown;
     private List<String> reasons = new ArrayList<>();
     private Map<String, ResourceAllocation> resourceAllocations;
-
-    public boolean isScaleUp() {
-      return scaleUp;
-    }
-
-    public void setScaleUp(boolean value) {
-      this.scaleUp = value;
-    }
-
-    public boolean isScaleDown() {
-      return scaleDown;
-    }
-
-    public void setScaleDown(boolean value) {
-      this.scaleDown = value;
-    }
-
-    public List<String> getReasons() {
-      return reasons;
-    }
-
-    public void addReason(String reason) {
-      this.reasons.add(reason);
-    }
-
-    public Map<String, ResourceAllocation> getResourceAllocations() {
-      return resourceAllocations;
-    }
-
-    public void setResourceAllocations(Map<String, ResourceAllocation> value) {
-      this.resourceAllocations = value;
-    }
 
     public boolean shouldScale() {
       return scaleUp || scaleDown;
