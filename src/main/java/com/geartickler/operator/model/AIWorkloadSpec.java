@@ -2,6 +2,7 @@ package com.geartickler.operator.model;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 import io.fabric8.kubernetes.api.model.ResourceRequirements;
+import lombok.Data;
 
 @Data
 public class AIWorkloadSpec {

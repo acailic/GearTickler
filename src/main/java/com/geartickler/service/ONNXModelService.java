@@ -1,12 +1,14 @@
 package com.geartickler.service;
 
 import ai.onnxruntime.*;
+import ai.onnxruntime.OrtModelMetadata;
 import com.geartickler.model.AIWorkload;
 import com.geartickler.model.AIWorkloadStatus.ModelStatus;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import jakarta.annotation.PreDestroy;
 
 import java.io.IOException;
 import java.nio.file.Files;
@@ -153,7 +155,7 @@ public class ONNXModelService {
     Set<String> inputNames;
     Map<String, NodeInfo> inputInfo;
     Set<String> outputNames;
-    OrtModelMetadata modelMetadata;
+    ai.onnxruntime.OrtModelMetadata modelMetadata;
   }
 
   @PreDestroy

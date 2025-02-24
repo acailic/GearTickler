@@ -5,6 +5,8 @@ import java.util.List;
 import java.util.Map;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import com.geartickler.model.AutoscalingPolicy;
+import com.geartickler.model.ModelVersion;
 
 @Data
 @NoArgsConstructor
