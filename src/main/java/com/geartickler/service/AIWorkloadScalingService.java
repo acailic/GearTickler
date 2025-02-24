@@ -20,22 +20,19 @@ import java.util.List;
 import java.util.ArrayList;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.Collectors;
+import com.geartickler.config.MetricsConfig;
 
 @ApplicationScoped
 public class AIWorkloadScalingService {
   private static final Logger log = LoggerFactory.getLogger(AIWorkloadScalingService.class);
   private final KubernetesClient kubernetesClient;
   private final Map<String, ScalingHistory> scalingHistory;
-
-  private static final double GPU_UTILIZATION_THRESHOLD_HIGH = 0.85;
-  private static final double GPU_UTILIZATION_THRESHOLD_LOW = 0.3;
-  private static final double LATENCY_THRESHOLD_MS = 100.0;
-  private static final double QUEUE_LENGTH_THRESHOLD = 100;
-  private static final int SCALING_COOLDOWN_SECONDS = 300;
+  private final MetricsConfig config;
 
   @Inject
-  public AIWorkloadScalingService(KubernetesClient kubernetesClient) {
+  public AIWorkloadScalingService(KubernetesClient kubernetesClient, MetricsConfig config) {
     this.kubernetesClient = kubernetesClient;
+    this.config = config;
     this.scalingHistory = new ConcurrentHashMap<>();
   }
 
@@ -61,35 +58,35 @@ public class AIWorkloadScalingService {
     if (history == null)
       return true;
 
-    return System.currentTimeMillis() - history.lastScalingTime > SCALING_COOLDOWN_SECONDS * 1000;
+    return System.currentTimeMillis() - history.lastScalingTime > config.scaling().scalingCooldownSeconds() * 1000;
   }
 
   private ScalingDecision calculateScalingDecision(MetricsStatus metrics, ScalingStatus currentScaling) {
     ScalingDecision decision = new ScalingDecision();
 
     // Check GPU utilization
-    if (metrics.getGpuUtilization() > GPU_UTILIZATION_THRESHOLD_HIGH) {
+    if (metrics.getGpuUtilization() > config.scaling().gpuUtilizationThresholdHigh()) {
       decision.setScaleUp(true);
       decision.addReason("High GPU utilization: " + metrics.getGpuUtilization());
-    } else if (metrics.getGpuUtilization() < GPU_UTILIZATION_THRESHOLD_LOW) {
+    } else if (metrics.getGpuUtilization() < config.scaling().gpuUtilizationThresholdLow()) {
       decision.setScaleDown(true);
       decision.addReason("Low GPU utilization: " + metrics.getGpuUtilization());
     }
 
     // Check inference latency
-    if (metrics.getAverageInferenceLatency() > LATENCY_THRESHOLD_MS) {
+    if (metrics.getAverageInferenceLatency() > config.scaling().latencyThresholdMs()) {
       decision.setScaleUp(true);
       decision.addReason("High inference latency: " + metrics.getAverageInferenceLatency());
     }
 
     // Check queue length
-    if (metrics.getQueueLength() > QUEUE_LENGTH_THRESHOLD) {
+    if (metrics.getQueueLength() > config.scaling().queueLengthThreshold()) {
       decision.setScaleUp(true);
       decision.addReason("Long queue length: " + metrics.getQueueLength());
     }
 
     // Check GPU memory
-    if (metrics.getGpuMemoryUtilization() > 0.9) {
+    if (metrics.getGpuMemoryUtilization() > config.scaling().gpuMemoryThresholdHigh()) {
       decision.setScaleUp(true);
       decision.addReason("High GPU memory utilization: " + metrics.getGpuMemoryUtilization());
     }
@@ -127,25 +124,23 @@ public class AIWorkloadScalingService {
   }
 
   private double calculateOptimalGpuAllocation(MetricsStatus metrics) {
-    double baseAllocation = 1.0;
-    double utilizationFactor = metrics.getGpuUtilization() / 0.7; // Target 70% utilization
-    double memoryFactor = metrics.getGpuMemoryUtilization() / 0.8; // Target 80% memory utilization
-    double queueFactor = Math.max(1.0, metrics.getQueueLength() / QUEUE_LENGTH_THRESHOLD);
+    double baseAllocation = config.resources().baseGpuUnits();
+    double utilizationFactor = metrics.getGpuUtilization() / config.scaling().targetGpuUtilization();
+    double memoryFactor = metrics.getGpuMemoryUtilization() / config.scaling().targetMemoryUtilization();
+    double queueFactor = Math.max(1.0, metrics.getQueueLength() / config.scaling().queueLengthThreshold());
 
     return baseAllocation * Math.max(utilizationFactor, Math.max(memoryFactor, queueFactor));
   }
 
   private double calculateOptimalMemoryAllocation(MetricsStatus metrics) {
-    // Base memory per model instance (in GB)
-    double baseMemory = 4.0;
-    double utilizationFactor = metrics.getMemoryUtilization() / 0.8; // Target 80% utilization
+    double baseMemory = config.resources().baseMemoryGb();
+    double utilizationFactor = metrics.getMemoryUtilization() / config.scaling().targetMemoryUtilization();
     return baseMemory * utilizationFactor;
   }
 
   private double calculateOptimalCpuAllocation(MetricsStatus metrics) {
-    // Base CPU cores per model instance
-    double baseCpu = 2.0;
-    double utilizationFactor = metrics.getCpuUtilization() / 0.8; // Target 80% utilization
+    double baseCpu = config.resources().baseCpuCores();
+    double utilizationFactor = metrics.getCpuUtilization() / config.scaling().targetCpuUtilization();
     return baseCpu * utilizationFactor;
   }
 

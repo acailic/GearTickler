@@ -15,6 +15,10 @@ public interface MetricsConfig {
 
   Scheduler scheduler();
 
+  Scaling scaling();
+
+  Resources resources();
+
   interface Prometheus {
     @WithDefault("http://prometheus-server:9090/api/v1/query")
     String url();
@@ -36,5 +40,51 @@ public interface MetricsConfig {
   interface Scheduler {
     @WithDefault("2")
     int poolSize();
+  }
+
+  interface Scaling {
+    @WithDefault("0.85")
+    double gpuUtilizationThresholdHigh();
+
+    @WithDefault("0.3")
+    double gpuUtilizationThresholdLow();
+
+    @WithDefault("100.0")
+    double latencyThresholdMs();
+
+    @WithDefault("100")
+    double queueLengthThreshold();
+
+    @WithDefault("300")
+    int scalingCooldownSeconds();
+
+    @WithDefault("0.9")
+    double gpuMemoryThresholdHigh();
+
+    @WithDefault("0.7")
+    double targetGpuUtilization();
+
+    @WithDefault("0.8")
+    double targetMemoryUtilization();
+
+    @WithDefault("0.8")
+    double targetCpuUtilization();
+  }
+
+  interface Resources {
+    @WithDefault("4.0")
+    double baseMemoryGb();
+
+    @WithDefault("2.0")
+    double baseCpuCores();
+
+    @WithDefault("1.0")
+    double baseGpuUnits();
+
+    @WithDefault("4")
+    int intraOpThreads();
+
+    @WithDefault("2")
+    int interOpThreads();
   }
 }

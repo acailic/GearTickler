@@ -9,6 +9,7 @@ import jakarta.inject.Inject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import jakarta.annotation.PreDestroy;
+import com.geartickler.config.MetricsConfig;
 
 import java.io.IOException;
 import java.nio.file.Files;
@@ -27,9 +28,11 @@ public class ONNXModelService {
   private final Map<String, OrtSession> modelSessions;
   private final Map<String, ModelMetadata> modelMetadata;
   private final Set<String> supportedDevices;
+  private final MetricsConfig config;
 
   @Inject
-  public ONNXModelService() {
+  public ONNXModelService(MetricsConfig config) {
+    this.config = config;
     this.modelSessions = new ConcurrentHashMap<>();
     this.modelMetadata = new ConcurrentHashMap<>();
     this.supportedDevices = initializeSupportedDevices();
@@ -70,8 +73,8 @@ public class ONNXModelService {
 
       // Enable graph optimization
       sessionOptions.setOptimizationLevel(OrtSession.SessionOptions.OptLevel.BASIC_OPT);
-      sessionOptions.setIntraOpNumThreads(4);
-      sessionOptions.setInterOpNumThreads(2);
+      sessionOptions.setIntraOpNumThreads(config.resources().intraOpThreads());
+      sessionOptions.setInterOpNumThreads(config.resources().interOpThreads());
 
       // Load the model
       OrtSession session = env.createSession(modelPath.toString(), sessionOptions);
